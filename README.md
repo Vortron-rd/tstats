@@ -1,4 +1,3 @@
-# c-template
-A template for my C programs. 
+# Cpustats
 
-I was heavily inspired by https://suckless.org 's style in making Makefiles.
+Based on my expiremental library, [LibHPD], cpustats is a front-end that displays statistics related to the performance of a linux machine. 
