@@ -1,0 +1,3 @@
+[submodule "libhpd"]
+	path = libhpd
+	url = https://github.com/Vortron-rd/libhpd.git
