@@ -1,16 +1,8 @@
 #include <stdio.h>
+#include <argp.h>
+#include <stdlib.h>
 #include "switchs.h"
 #include "libhpd/libhpd.h"
-int core = -1;
-unsigned int time = 3;
-void printhelptext() {
-	printf("tstats - a terminal program for performance data\n"
-		    "\n"
-		    "usage: tstats [options]\n"
-		    "\n"
-		    "options:\n"
-		    "-s displays the percent of time the cpu has spent on tasks\n");
-}
 	
 void printcputasks(int core, int time) {	
 	float *stats = cpustats(core, time);
@@ -31,29 +23,55 @@ void printbasicstats(int core, int time) {
 	float load = 1 - cpustm(core, STAT_IDLE, time);
 	printf("CPU Load: %.2f%%\n",load*100);
 }
-int main(int argc, char* argv[]) {
-	
-	if(argc > 1) {
-			for(int i = 1; i < argc; i++) {
-				switchs(argv[i]) {
-					cases("--help")
-						printhelptext();
-						return 0;
-						break;
-					cases("-s")
-						printcputasks(-1, 3);
-						break;
-				    defaults
-						printf("Invalid argument(s): \"%s\"\n", argv[i]);
-						printhelptext();
-						return 1;
-						break;
-					} switchs_end;
-			}
+const char *argp_program_version = VERSION; //Define program version according to compiler argument -DVERSION
+static char doc[] = "A terminal frontend to libHPD- A library that displays hardware data on linux machines";
+static struct argp_option options[] = {
+  {"cpuload",  'l', 0,      0,  "Display CPU load", 0 },
+  { 0 }
+};
+struct arguments{
+  bool cpuload; 
+};
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state)
+{
+  struct arguments *arguments = state->input;
+
+  switch(key)
+    {
+    case 'l':
+      arguments->cpuload = true;
+      break;
+
+    case ARGP_KEY_ARG:
+    	printf("Unknowm Argument: %s", arg);
+        argp_usage (state);
+	break;
+
+    default:
+      return ARGP_ERR_UNKNOWN;
+    }
+  return 0;
+}
+
+// Options for argp
+static struct argp argp = { options, parse_opt, 0, doc, 0, 0, 0 };
+
+
+int
+main(int argc, char **argv)
+{
+	struct arguments arguments;
+	int core = -1;
+	unsigned int time = 3;
+	argp_parse(&argp, argc, argv, 0, 0, &arguments);
+	printf("Gathering data...\n\n");
+	if(argc <= 1) {
+		printbasicstats(core, time);
 	}
-	else { 
-		printbasicstats(-1, 3);
-		return 0;
-		}
-				
+	if(arguments.cpuload == true) {
+		printcputasks(core, time); 
+	}
+	
+	exit(0);
 }
